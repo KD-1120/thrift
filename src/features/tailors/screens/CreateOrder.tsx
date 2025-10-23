@@ -1,6 +1,6 @@
 // Complete Create Order Screen with Measurement Integration
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,11 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import { colors } from '../../../design-system/colors';
 import { spacing, radius } from '../../../design-system/spacing';
 import { textStyles } from '../../../design-system/typography';
@@ -22,32 +25,52 @@ import { Card } from '../../../components/Card';
 import { formatCurrency } from '../../../utils/formatters';
 import { cameraService } from '../../../services/camera';
 import type { Measurement } from '../../../types';
+import { createOrderFormSchema, CreateOrderFormData } from '../../../validation/order.schema';
+
 
 type MainStackParamList = {
   OrderDetail: { orderId: string };
 };
 
 export default function CreateOrderScreen() {
-  const route = useRoute();
+import { useRoute } from '@react-navigation/native';
   const navigation = useNavigation<StackNavigationProp<MainStackParamList>>();
-  
-  // Form state
-  const [garmentType, setGarmentType] = useState('');
-  const [fabricType, setFabricType] = useState('');
-  const [description, setDescription] = useState('');
-  const [useSavedMeasurements, setUseSavedMeasurements] = useState(false);
-  const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null);
-  const [customMeasurements, setCustomMeasurements] = useState({
-    chest: '',
-    waist: '',
-    hips: '',
-    shoulder: '',
-    sleeveLength: '',
-    shirtLength: '',
+  const route = useRoute();
+  const { tailorId } = route.params as { tailorId: string };
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateOrderFormData>({
+    resolver: zodResolver(createOrderFormSchema),
+    defaultValues: {
+      garmentType: '',
+      fabricType: '',
+      description: '',
+      useSavedMeasurements: false,
+      selectedMeasurement: null,
+      customMeasurements: {
+        chest: '',
+        waist: '',
+        hips: '',
+        shoulder: '',
+        sleeveLength: '',
+        shirtLength: '',
+      },
+      referenceImages: [],
+      specialInstructions: '',
+    },
   });
-  const [referenceImages, setReferenceImages] = useState<string[]>([]);
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  const [loading, setLoading] = useState(false);
+
+  const useSavedMeasurements = watch('useSavedMeasurements');
+  const selectedMeasurement = watch('selectedMeasurement');
+  const garmentType = watch('garmentType');
+  const fabricType = watch('fabricType');
+  const referenceImages = watch('referenceImages', []);
+
 
   // Mock saved measurements
   const savedMeasurements: Measurement[] = [
@@ -96,7 +119,7 @@ export default function CreateOrderScreen() {
           onPress: async () => {
             const result = await cameraService.capturePhoto();
             if (result) {
-              setReferenceImages([...referenceImages, result.uri]);
+              setValue('referenceImages', [...referenceImages, result.uri]);
             }
           },
         },
@@ -105,7 +128,7 @@ export default function CreateOrderScreen() {
           onPress: async () => {
             const result = await cameraService.pickImage();
             if (result) {
-              setReferenceImages([...referenceImages, result.uri]);
+              setValue('referenceImages', [...referenceImages, result.uri]);
             }
           },
         },
@@ -116,36 +139,20 @@ export default function CreateOrderScreen() {
 
   const handleRemoveImage = (index: number) => {
     const newImages = referenceImages.filter((_, i) => i !== index);
-    setReferenceImages(newImages);
+    setValue('referenceImages', newImages);
   };
 
-  const handleSubmit = async () => {
-    // Validation
-    if (!garmentType) {
-      Alert.alert('Error', 'Please select a garment type');
-      return;
-    }
-
-    if (!useSavedMeasurements) {
-      if (!customMeasurements.chest || !customMeasurements.waist) {
-        Alert.alert('Error', 'Please provide at least chest and waist measurements');
-        return;
-      }
-    }
-
-    setLoading(true);
+  const onSubmit = async (data: CreateOrderFormData) => {
+    const submissionData = {
+      ...data,
+      tailorId,
+      estimatedCost: 150,
+    };
 
     try {
       // TODO: Submit order to API
-      // const orderData = {
-      //   garmentType,
-      //   fabricType,
-      //   description,
-      //   measurements: useSavedMeasurements ? selectedMeasurement : customMeasurements,
-      //   referenceImages,
-      //   specialInstructions,
-      // };
-      // await createOrder(orderData);
+      // await createOrder(submissionData);
+      console.log('Form data:', submissionData);
 
       await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -161,10 +168,13 @@ export default function CreateOrderScreen() {
       );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to create order');
-    } finally {
-      setLoading(false);
     }
   };
+
+    const onError = (errors: any) => {
+    console.log('Form errors:', errors);
+  };
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -191,7 +201,7 @@ export default function CreateOrderScreen() {
                   styles.chip,
                   garmentType === type && styles.chipActive,
                 ]}
-                onPress={() => setGarmentType(type)}
+                onPress={() => setValue('garmentType', type, { shouldValidate: true })}
               >
                 <Text
                   style={[
@@ -204,6 +214,7 @@ export default function CreateOrderScreen() {
               </TouchableOpacity>
             ))}
           </View>
+          {errors.garmentType && <Text style={styles.errorText}>{errors.garmentType.message}</Text>}
         </Card>
 
         {/* Fabric Type */}
@@ -217,7 +228,7 @@ export default function CreateOrderScreen() {
                   styles.chip,
                   fabricType === type && styles.chipActive,
                 ]}
-                onPress={() => setFabricType(type)}
+                onPress={() => setValue('fabricType', type)}
               >
                 <Text
                   style={[
@@ -235,16 +246,23 @@ export default function CreateOrderScreen() {
         {/* Description */}
         <Card variant="outlined">
           <Text style={styles.sectionTitle}>Description</Text>
-          <TextInput
-            style={styles.textArea}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Describe the garment you want..."
-            placeholderTextColor={colors.text.placeholder}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.textArea}
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                placeholder="Describe the garment you want..."
+                placeholderTextColor={colors.text.placeholder}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            )}
+           />
         </Card>
 
         {/* Measurements */}
@@ -253,11 +271,17 @@ export default function CreateOrderScreen() {
             <Text style={styles.sectionTitle}>Measurements (cm) *</Text>
             <View style={styles.switchContainer}>
               <Text style={styles.switchLabel}>Use saved</Text>
-              <Switch
-                value={useSavedMeasurements}
-                onValueChange={setUseSavedMeasurements}
-                trackColor={{ false: colors.neutral[300], true: colors.primary[300] }}
-                thumbColor={useSavedMeasurements ? colors.primary[500] : colors.neutral[100]}
+              <Controller
+                control={control}
+                name="useSavedMeasurements"
+                render={({ field: { onChange, value } }) => (
+                  <Switch
+                    value={value}
+                    onValueChange={onChange}
+                    trackColor={{ false: colors.neutral[300], true: colors.primary[300] }}
+                    thumbColor={value ? colors.primary[500] : colors.neutral[100]}
+                  />
+                )}
               />
             </View>
           </View>
@@ -271,7 +295,7 @@ export default function CreateOrderScreen() {
                     styles.measurementCard,
                     selectedMeasurement?.id === measurement.id && styles.measurementCardActive,
                   ]}
-                  onPress={() => setSelectedMeasurement(measurement)}
+                  onPress={() => setValue('selectedMeasurement', measurement, { shouldValidate: true })}
                 >
                   <Text style={styles.measurementName}>{measurement.name}</Text>
                   <Text style={styles.measurementDetails}>
@@ -279,6 +303,7 @@ export default function CreateOrderScreen() {
                   </Text>
                 </TouchableOpacity>
               ))}
+              {errors.selectedMeasurement && <Text style={styles.errorText}>{errors.selectedMeasurement.message}</Text>}
               <Button
                 title="View All Measurements"
                 variant="outline"
@@ -293,85 +318,117 @@ export default function CreateOrderScreen() {
               <View style={styles.row}>
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputLabel}>Chest *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={customMeasurements.chest}
-                    onChangeText={(value) =>
-                      setCustomMeasurements({ ...customMeasurements, chest: value })
-                    }
-                    placeholder="100"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.text.placeholder}
-                  />
+                  <Controller
+                    control={control}
+                    name="customMeasurements.chest"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="100"
+                        keyboardType="numeric"
+                        placeholderTextColor={colors.text.placeholder}
+                      />
+                    )}
+                   />
+                  {errors.customMeasurements?.chest && <Text style={styles.errorText}>{errors.customMeasurements.chest.message}</Text>}
                 </View>
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputLabel}>Waist *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={customMeasurements.waist}
-                    onChangeText={(value) =>
-                      setCustomMeasurements({ ...customMeasurements, waist: value })
-                    }
-                    placeholder="85"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.text.placeholder}
-                  />
+                  <Controller
+                    control={control}
+                    name="customMeasurements.waist"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="85"
+                        keyboardType="numeric"
+                        placeholderTextColor={colors.text.placeholder}
+                      />
+                    )}
+                   />
+                   {errors.customMeasurements?.waist && <Text style={styles.errorText}>{errors.customMeasurements.waist.message}</Text>}
                 </View>
               </View>
               <View style={styles.row}>
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputLabel}>Hips</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={customMeasurements.hips}
-                    onChangeText={(value) =>
-                      setCustomMeasurements({ ...customMeasurements, hips: value })
-                    }
-                    placeholder="95"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.text.placeholder}
-                  />
+                  <Controller
+                    control={control}
+                    name="customMeasurements.hips"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="95"
+                        keyboardType="numeric"
+                        placeholderTextColor={colors.text.placeholder}
+                      />
+                    )}
+                   />
                 </View>
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputLabel}>Shoulder</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={customMeasurements.shoulder}
-                    onChangeText={(value) =>
-                      setCustomMeasurements({ ...customMeasurements, shoulder: value })
-                    }
-                    placeholder="45"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.text.placeholder}
-                  />
+                  <Controller
+                    control={control}
+                    name="customMeasurements.shoulder"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="45"
+                        keyboardType="numeric"
+                        placeholderTextColor={colors.text.placeholder}
+                      />
+                    )}
+                   />
                 </View>
               </View>
               <View style={styles.row}>
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputLabel}>Sleeve Length</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={customMeasurements.sleeveLength}
-                    onChangeText={(value) =>
-                      setCustomMeasurements({ ...customMeasurements, sleeveLength: value })
-                    }
-                    placeholder="60"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.text.placeholder}
-                  />
+                  <Controller
+                    control={control}
+                    name="customMeasurements.sleeveLength"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="60"
+                        keyboardType="numeric"
+                        placeholderTextColor={colors.text.placeholder}
+                      />
+                    )}
+                   />
                 </View>
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputLabel}>Shirt Length</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={customMeasurements.shirtLength}
-                    onChangeText={(value) =>
-                      setCustomMeasurements({ ...customMeasurements, shirtLength: value })
-                    }
-                    placeholder="75"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.text.placeholder}
-                  />
+                  <Controller
+                    control={control}
+                    name="customMeasurements.shirtLength"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="75"
+                        keyboardType="numeric"
+                        placeholderTextColor={colors.text.placeholder}
+                      />
+                    )}
+                   />
                 </View>
               </View>
               <Button
@@ -417,16 +474,23 @@ export default function CreateOrderScreen() {
         {/* Special Instructions */}
         <Card variant="outlined">
           <Text style={styles.sectionTitle}>Special Instructions</Text>
-          <TextInput
-            style={styles.textArea}
-            value={specialInstructions}
-            onChangeText={setSpecialInstructions}
-            placeholder="Any special requests or details..."
-            placeholderTextColor={colors.text.placeholder}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
+           <Controller
+            control={control}
+            name="specialInstructions"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.textArea}
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                placeholder="Any special requests or details..."
+                placeholderTextColor={colors.text.placeholder}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+            )}
+           />
         </Card>
 
         {/* Estimated Cost */}
@@ -442,10 +506,10 @@ export default function CreateOrderScreen() {
 
         {/* Submit Button */}
         <Button
-          title={loading ? 'Creating Order...' : 'Create Order'}
-          onPress={handleSubmit}
-          loading={loading}
-          disabled={loading}
+          title={isSubmitting ? 'Creating Order...' : 'Create Order'}
+          onPress={handleSubmit(onSubmit, onError)}
+          loading={isSubmitting}
+          disabled={isSubmitting}
           fullWidth
         />
 
@@ -673,5 +737,10 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: spacing.lg,
+  },
+  errorText: {
+    ...textStyles.small,
+    color: colors.danger[500],
+    marginTop: spacing.sm,
   },
 });

@@ -13,7 +13,6 @@ import measurementsRoutes from './routes/measurements.routes';
 import tailorsRoutes from './routes/tailors.routes';
 import messagingRoutes from './routes/messaging.routes';
 import callsRoutes from './routes/calls.routes';
-import paymentsRoutes from './routes/payments.routes';
 import { errorHandler } from './middleware/error-handler';
 
 // Load environment variables
@@ -102,7 +101,6 @@ async function registerRoutes() {
   await fastify.register(tailorsRoutes, { prefix: '/api/tailors' });
   await fastify.register(messagingRoutes);
   await fastify.register(callsRoutes, { prefix: '/api' });
-  await fastify.register(paymentsRoutes, { prefix: '/api' });
 
   fastify.log.info('Routes registered successfully');
 }
