@@ -19,6 +19,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ onNext, onBack }) => {
   const [newSpecialty, setNewSpecialty] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [turnaroundTime, setTurnaroundTime] = useState('');
   const [updateTailorProfile, { isLoading }] = useUpdateTailorProfileMutation();
   const user = useAppSelector((state) => state.auth.user);
 
@@ -41,6 +42,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ onNext, onBack }) => {
         data: {
           specialties,
           priceRange: { min: parseInt(minPrice, 10), max: parseInt(maxPrice, 10) },
+          turnaroundTime,
         },
       }).unwrap();
       onNext();
@@ -92,6 +94,12 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ onNext, onBack }) => {
           keyboardType="numeric"
         />
       </View>
+      <TextInput
+        style={styles.priceInput}
+        value={turnaroundTime}
+        onChangeText={setTurnaroundTime}
+        placeholder="Typical Turnaround Time (e.g., 3-5 days)"
+      />
       <View style={styles.buttonContainer}>
         <Button title="Back" onPress={onBack} variant="outline" />
         <Button title="Finish" onPress={handleFinish} loading={isLoading} />

@@ -375,6 +375,38 @@ export default async function tailorsRoutes(fastify: FastifyInstance) {
     }
   );
 
+  fastify.post(
+    '/:tailorId/verification',
+    { preHandler: authenticate },
+    async (request: FastifyRequest, reply) => {
+      const { tailorId } = request.params as { tailorId: string };
+      const { uid } = (request as AuthenticatedRequest).user;
+
+      const tailor = tailors.get(tailorId);
+
+      if (!tailor) {
+        return reply.code(404).send({
+          statusCode: 404,
+          error: 'Not Found',
+          message: 'Tailor not found',
+        });
+      }
+
+      if (tailor.userId !== uid) {
+        return reply.code(403).send({
+          statusCode: 403,
+          error: 'Forbidden',
+          message: 'You are not allowed to modify this profile',
+        });
+      }
+
+      tailor.verificationStatus = 'pending';
+      tailors.set(tailorId, tailor);
+
+      return reply.code(200).send(tailor);
+    }
+  );
+
   fastify.delete(
     '/:tailorId/portfolio/:itemId',
     { preHandler: authenticate },

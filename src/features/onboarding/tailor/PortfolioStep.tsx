@@ -8,31 +8,45 @@ import { cameraService } from '../../../services/camera';
 import { useAddPortfolioItemMutation } from '../../../api/tailors.api';
 import { useAppSelector } from '../../../store/hooks';
 
+import { TextInput } from 'react-native';
+
+interface PortfolioItem {
+  imageUrl: string;
+  title: string;
+  description: string;
+}
+
 interface PortfolioStepProps {
   onNext: () => void;
   onBack: () => void;
 }
 
 const PortfolioStep: React.FC<PortfolioStepProps> = ({ onNext, onBack }) => {
-  const [images, setImages] = useState<string[]>([]);
+  const [items, setItems] = useState<PortfolioItem[]>([]);
   const [addPortfolioItem, { isLoading }] = useAddPortfolioItemMutation();
   const user = useAppSelector((state) => state.auth.user);
 
   const handleAddImage = async () => {
     const result = await cameraService.pickImage();
     if (result) {
-      setImages([...images, result.uri]);
+      setItems([...items, { imageUrl: result.uri, title: '', description: '' }]);
     }
+  };
+
+  const handleUpdateItem = (index: number, field: 'title' | 'description', value: string) => {
+    const newItems = [...items];
+    newItems[index][field] = value;
+    setItems(newItems);
   };
 
   const handleNext = async () => {
     if (!user) return;
     try {
       await Promise.all(
-        images.map((uri) =>
+        items.map((item) =>
           addPortfolioItem({
             tailorId: user.id,
-            item: { imageUrl: uri, title: 'Portfolio Item' },
+            item,
           }).unwrap()
         )
       );
@@ -49,10 +63,26 @@ const PortfolioStep: React.FC<PortfolioStepProps> = ({ onNext, onBack }) => {
         Upload a few images of your best work to attract clients.
       </Text>
       <FlatList
-        data={images}
-        renderItem={({ item }) => <Image source={{ uri: item }} style={styles.image} />}
-        keyExtractor={(item) => item}
-        numColumns={3}
+        data={items}
+        renderItem={({ item, index }) => (
+          <View style={styles.itemContainer}>
+            <Image source={{ uri: item.imageUrl }} style={styles.image} />
+            <TextInput
+              style={styles.input}
+              placeholder="Title"
+              value={item.title}
+              onChangeText={(value) => handleUpdateItem(index, 'title', value)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Description"
+              value={item.description}
+              onChangeText={(value) => handleUpdateItem(index, 'description', value)}
+            />
+          </View>
+        )}
+        keyExtractor={(item) => item.imageUrl}
+        numColumns={1}
         ListFooterComponent={() => (
           <Button title="Add Image" onPress={handleAddImage} variant="outline" style={{ margin: spacing.sm }} />
         )}
@@ -92,6 +122,18 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: radius.md,
     margin: spacing.sm,
+  },
+  itemContainer: {
+    flex: 1,
+    margin: spacing.sm,
+  },
+  input: {
+    ...textStyles.body,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginTop: spacing.sm,
   },
 });
 

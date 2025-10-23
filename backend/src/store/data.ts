@@ -79,6 +79,7 @@ export interface TailorProfile {
   priceRange: { min: number; max: number };
   turnaroundTime: string;
   verified: boolean;
+  verificationStatus: 'unverified' | 'pending' | 'verified';
 }
 
 export interface TailorReview {
@@ -214,6 +215,7 @@ export function incrementMeasurementId() {
     priceRange: { min: 150, max: 1500 },
     turnaroundTime: '7-14 days',
     verified: true,
+    verificationStatus: 'verified',
   };
 
   tailors.set(sampleTailor.id, sampleTailor);
@@ -265,6 +267,7 @@ export function incrementMeasurementId() {
     priceRange: { min: 300, max: 2000 },
     turnaroundTime: '10-21 days',
     verified: true,
+    verificationStatus: 'verified',
   };
   tailors.set(tailor2.id, tailor2);
 
@@ -315,6 +318,7 @@ export function incrementMeasurementId() {
     priceRange: { min: 120, max: 600 },
     turnaroundTime: '5-10 days',
     verified: true,
+    verificationStatus: 'verified',
   };
   tailors.set(tailor3.id, tailor3);
 
@@ -361,6 +365,7 @@ export function incrementMeasurementId() {
     priceRange: { min: 500, max: 2500 },
     turnaroundTime: '14-21 days',
     verified: true,
+    verificationStatus: 'verified',
   };
   tailors.set(tailor4.id, tailor4);
 
@@ -400,6 +405,7 @@ export function incrementMeasurementId() {
     priceRange: { min: 800, max: 3500 },
     turnaroundTime: '30-45 days',
     verified: true,
+    verificationStatus: 'verified',
   };
   tailors.set(tailor5.id, tailor5);
 
