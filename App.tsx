@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { store } from './src/store/store';
-import { RootNavigator } from './src/store/navigation';
+import OnboardingNavigator from './src/store/OnboardingNavigator';
 import { useAuthRestore } from './src/hooks/useAuthRestore';
 import { useFirebaseAuthObserver } from './src/hooks/useFirebaseAuthObserver';
 import { colors } from './src/design-system/colors';
@@ -26,7 +26,7 @@ function AppContent() {
     );
   }
 
-  return <RootNavigator />;
+  return <OnboardingNavigator />;
 }
 
 export default function App() {

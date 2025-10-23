@@ -49,6 +49,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         role: body.role,
         avatar: null,
         createdAt: new Date().toISOString(),
+        hasCompletedOnboarding: false,
       };
 
       users.set(uid, user);
@@ -115,6 +116,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           role: defaultRole,
           avatar: null,
           createdAt: new Date().toISOString(),
+          hasCompletedOnboarding: false,
         };
 
         users.set(uid, user);
