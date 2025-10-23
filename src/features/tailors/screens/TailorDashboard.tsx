@@ -102,7 +102,7 @@ export default function TailorDashboardScreen() {
       title: 'Get Verified',
       subtitle: 'Increase credibility',
       icon: 'shield-checkmark-outline',
-      screen: 'VerificationStatus',
+      screen: 'VerificationSubmission',
     },
   ];
 

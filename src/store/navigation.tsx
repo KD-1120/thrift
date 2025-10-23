@@ -59,6 +59,7 @@ import PortfolioAnalyticsScreen from '../features/tailors/screens/PortfolioAnaly
 import VerificationStatusScreen from '../features/tailors/screens/VerificationStatus';
 import ResponseTimeSettingsScreen from '../features/tailors/screens/ResponseTimeSettings';
 import TailorSettingsScreen from '../features/tailors/screens/TailorSettings';
+import VerificationSubmissionScreen from '../features/tailors/screens/VerificationSubmissionScreen';
 
 // Navigation types
 export type AuthStackParamList = {
@@ -105,6 +106,7 @@ export type MainStackParamList = {
   ReviewManagement: undefined;
   PortfolioAnalytics: undefined;
   ResponseTimeSettings: undefined;
+  VerificationSubmission: undefined;
 };
 
 export type HomeTabsParamList = {
@@ -326,6 +328,7 @@ function MainNavigator() {
       <MainStack.Screen name="ReviewManagement" component={ReviewManagementScreen} />
       <MainStack.Screen name="PortfolioAnalytics" component={PortfolioAnalyticsScreen} />
       <MainStack.Screen name="ResponseTimeSettings" component={ResponseTimeSettingsScreen} />
+      <MainStack.Screen name="VerificationSubmission" component={VerificationSubmissionScreen} />
     </MainStack.Navigator>
   );
 }

@@ -60,6 +60,8 @@ export default function CategoryBrowseScreen() {
     page: 1,
     pageSize: 20,
     search: searchQuery,
+    sortBy: selectedSort,
+    specialties: selectedSubCategory === 'All' ? [] : [selectedSubCategory],
   });
 
   const tailors = tailorsData?.data || [];
