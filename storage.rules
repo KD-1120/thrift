@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Order reference images - authenticated users only
+    match /orders/{orderId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Tailor portfolio images - public read, authenticated write
+    match /tailors/{tailorId}/portfolio/{allPaths=**} {
+      allow read: if true; // Public read for browsing
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // User avatars - public read, owner write
+    match /users/{userId}/avatar/{allPaths=**} {
+      allow read: if true; // Public read for profile display
+      allow write: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+    
+    // Measurement guide images - public read only
+    match /guides/{allPaths=**} {
+      allow read: if true;
+      allow write: if false; // Admin only (manage via Firebase Console)
+    }
+    
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

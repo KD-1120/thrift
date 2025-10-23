@@ -1,0 +1,30 @@
+mutation CreateUser @auth(level: USER) {
+  user_insert(data: {
+    displayName: "New User",
+    firebaseUid_expr: "auth.uid",
+    userType: "customer"
+  })
+}
+
+query ListTailorProfiles @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  tailorProfiles {
+    id
+    specialty
+    averageRating
+  }
+}
+
+mutation UpdatePortfolioItem($id: UUID!, $description: String) @auth(level: USER) {
+  portfolioItem_update(key: {id: $id}, data: {
+    description: $description
+  })
+}
+
+query GetUserReviews($userId: UUID!) @auth(level: USER) {
+  reviews(where: {customerId: {eq: $userId}}) {
+    id
+    rating
+    reviewText
+    reviewDate
+  }
+}

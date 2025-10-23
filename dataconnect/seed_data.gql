@@ -1,0 +1,35 @@
+mutation CreateDemoData @transaction @auth(level: PUBLIC, insecureReason: "This mutation is used to seed the database with demo data") {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      displayName: "demouser1",
+      email: "demouser1@example.com",
+      firebaseUid: "demouser1uid",
+      userType: "customer"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      displayName: "demouser2",
+      email: "demouser2@example.com",
+      firebaseUid: "demouser2uid",
+      userType: "tailor"
+    }
+  ])
+  tailorProfile_insertMany(data: [
+    {
+      id: "660e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      averageRating: 4.5,
+      specialty: "Suits"
+    }
+  ])
+  portfolioItem_insertMany(data: [
+    {
+      id: "770e8400-e29b-41d4-a716-446655440000",
+      tailorProfileId: "660e8400-e29b-41d4-a716-446655440000",
+      description: "Example portfolio item",
+      imageUrl: "http://example.com/image.jpg",
+      style: "Modern"
+    }
+  ])
+}

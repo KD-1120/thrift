@@ -1,0 +1,57 @@
+# Ignore node modules
+node_modules/
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Typescript
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+coverage/
+
+# Build outputs
+android/
+ios/
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+functions/lib/
+functions/node_modules/
+dataconnect/generated/

@@ -1,0 +1,55 @@
+type User @table {
+  firebaseUid: String!
+  displayName: String!
+  userType: String!
+  email: String
+  phoneNumber: String
+  profilePictureUrl: String
+  bio: String
+  location: String
+}
+
+type TailorProfile @table {
+  user: User!
+  specialty: String!
+  averageRating: Float!
+  yearsOfExperience: Int
+  portfolioDescription: String
+  averageLeadTimeDays: Int
+}
+
+type Style @table {
+  name: String!
+  description: String
+}
+
+type PortfolioItem @table {
+  tailorProfile: TailorProfile!
+  imageUrl: String!
+  description: String!
+  style: String!
+  priceEstimate: Float
+  materialsUsed: String
+}
+
+type Order @table {
+  customer: User!
+  tailorProfile: TailorProfile!
+  status: String!
+  orderDate: Timestamp!
+  estimatedDeliveryDate: Timestamp!
+  description: String
+  measurements: String
+  referenceImages: [String]
+  totalPrice: Float
+}
+
+type Review @table {
+  order: Order!
+  customer: User!
+  tailorProfile: TailorProfile!
+  rating: Int!
+  reviewText: String!
+  reviewDate: Timestamp!
+  imageUrls: [String]
+}

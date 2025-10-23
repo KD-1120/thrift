@@ -1,0 +1,95 @@
+// Design System - Tamagui Theme Configuration
+
+import { createTamagui, createTokens } from 'tamagui';
+import { colors } from './src/design-system/colors';
+import { spacing, radius } from './src/design-system/spacing';
+import { typography } from './src/design-system/typography';
+
+const tokens = createTokens({
+  color: {
+    ...colors.primary,
+    ...colors.neutral,
+    white: '#FFFFFF',
+    black: '#000000',
+    transparent: 'transparent',
+  },
+  space: spacing,
+  size: {
+    ...spacing,
+    full: '100%',
+    screen: '100vh',
+  },
+  radius,
+  zIndex: {
+    0: 0,
+    10: 10,
+    20: 20,
+    30: 30,
+    40: 40,
+    50: 50,
+  },
+});
+
+export const config = createTamagui({
+  tokens,
+  themes: {
+    light: {
+      background: colors.background.primary,
+      backgroundSecondary: colors.background.secondary,
+      backgroundTertiary: colors.background.tertiary,
+      color: colors.text.primary,
+      colorSecondary: colors.text.secondary,
+      colorTertiary: colors.text.tertiary,
+      primary: colors.primary[500],
+      primaryLight: colors.primary[300],
+      primaryDark: colors.primary[700],
+      border: colors.border.main,
+      borderLight: colors.border.light,
+      success: colors.success.main,
+      error: colors.error.main,
+      warning: colors.warning.main,
+      info: colors.info.main,
+    },
+    dark: {
+      background: colors.neutral[900],
+      backgroundSecondary: colors.neutral[800],
+      backgroundTertiary: colors.neutral[700],
+      color: colors.text.inverse,
+      colorSecondary: colors.neutral[300],
+      colorTertiary: colors.neutral[400],
+      primary: colors.primary[400],
+      primaryLight: colors.primary[300],
+      primaryDark: colors.primary[600],
+      border: colors.neutral[700],
+      borderLight: colors.neutral[600],
+      success: colors.success.main,
+      error: colors.error.main,
+      warning: colors.warning.main,
+      info: colors.info.main,
+    },
+  },
+  media: {
+    xs: { maxWidth: 660 },
+    sm: { maxWidth: 800 },
+    md: { maxWidth: 1020 },
+    lg: { maxWidth: 1280 },
+    xl: { maxWidth: 1420 },
+    xxl: { maxWidth: 1600 },
+    gtXs: { minWidth: 660 + 1 },
+    gtSm: { minWidth: 800 + 1 },
+    gtMd: { minWidth: 1020 + 1 },
+    gtLg: { minWidth: 1280 + 1 },
+    short: { maxHeight: 820 },
+    tall: { minHeight: 820 },
+    hoverNone: { hover: 'none' },
+    pointerCoarse: { pointer: 'coarse' },
+  },
+});
+
+export type AppConfig = typeof config;
+
+declare module 'tamagui' {
+  interface TamaguiCustomConfig extends AppConfig {}
+}
+
+export default config;
