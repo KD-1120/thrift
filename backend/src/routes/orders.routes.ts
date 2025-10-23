@@ -4,9 +4,19 @@ import { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
 
-import { createOrderFormSchema } from '../../../src/validation/order.schema';
-
 // Validation schemas
+const createOrderSchema = z.object({
+  tailorId: z.string(),
+  garmentType: z.string(),
+  fabricType: z.string(),
+  description: z.string(),
+  measurementId: z.string().optional(),
+  customMeasurements: z.record(z.number()).optional(),
+  referenceImages: z.array(z.string()),
+  specialInstructions: z.string().optional(),
+  estimatedCost: z.number().positive(),
+});
+
 const updateStatusSchema = z.object({
   status: z.enum([
     'pending',
@@ -34,7 +44,7 @@ export default async function ordersRoutes(fastify: FastifyInstance) {
       preHandler: authenticate,
     },
     async (request: FastifyRequest, reply) => {
-      const body = createOrderFormSchema.parse(request.body);
+      const body = createOrderSchema.parse(request.body);
       const { uid } = (request as AuthenticatedRequest).user;
 
       const orderId = `order_${incrementOrderId()}`;

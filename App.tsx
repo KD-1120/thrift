@@ -10,6 +10,7 @@ import { RootNavigator } from './src/store/navigation';
 import { useAuthRestore } from './src/hooks/useAuthRestore';
 import { useFirebaseAuthObserver } from './src/hooks/useFirebaseAuthObserver';
 import { colors } from './src/design-system/colors';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 function AppContent() {
   const { isRestoring } = useAuthRestore();
@@ -33,7 +34,9 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <StatusBar style="auto" />
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </Provider>
     </GestureHandlerRootView>
   );
