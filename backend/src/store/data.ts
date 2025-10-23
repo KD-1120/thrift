@@ -10,6 +10,7 @@ export interface User {
   avatar: string | null;
   createdAt: string;
   updatedAt?: string;
+  hasCompletedOnboarding: boolean;
 }
 
 export interface Order {
@@ -156,6 +157,7 @@ export function incrementMeasurementId() {
     role: 'tailor',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
     createdAt: new Date('2024-01-01T09:00:00.000Z').toISOString(),
+    hasCompletedOnboarding: true,
   };
 
   users.set(sampleUser.id, sampleUser);
@@ -487,6 +489,7 @@ export function incrementMeasurementId() {
     role: 'customer',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
     createdAt: new Date('2024-01-01T08:00:00.000Z').toISOString(),
+    hasCompletedOnboarding: true,
   };
   users.set(customerId, customerUser);
 
@@ -559,6 +562,7 @@ export function incrementMeasurementId() {
     role: 'tailor',
     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
     createdAt: new Date('2024-01-01T09:00:00.000Z').toISOString(),
+    hasCompletedOnboarding: true,
   };
   users.set(tailor2User.id, tailor2User);
 

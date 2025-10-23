@@ -30,7 +30,7 @@ type MainStackParamList = {
 export default function CreateOrderScreen() {
   const route = useRoute();
   const navigation = useNavigation<StackNavigationProp<MainStackParamList>>();
-  
+
   // Form state
   const [garmentType, setGarmentType] = useState('');
   const [fabricType, setFabricType] = useState('');

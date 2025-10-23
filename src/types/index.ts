@@ -8,6 +8,7 @@ export interface User {
   role: 'customer' | 'tailor';
   avatar?: string;
   createdAt: string;
+  hasCompletedOnboarding: boolean;
 }
 
 export interface Tailor {
