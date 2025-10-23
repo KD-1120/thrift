@@ -18,9 +18,11 @@ export const tailorsApi = createApi({
         specialties?: string[];
         minRating?: number;
         search?: string;
+        sortBy?: string;
+        priceRange?: string;
       }
     >({
-      query: ({ page = 1, pageSize = 20, specialties, minRating, search }) => {
+      query: ({ page = 1, pageSize = 20, specialties, minRating, search, sortBy, priceRange }) => {
         const params = new URLSearchParams({
           page: page.toString(),
           pageSize: pageSize.toString(),
@@ -34,6 +36,12 @@ export const tailorsApi = createApi({
         }
         if (search) {
           params.append('search', search);
+        }
+        if (sortBy) {
+          params.append('sortBy', sortBy);
+        }
+        if (priceRange) {
+          params.append('priceRange', priceRange);
         }
         
         return `/api/tailors?${params.toString()}`;

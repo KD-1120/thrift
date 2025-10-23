@@ -7,6 +7,9 @@ import { spacing, radius } from '../../../design-system/spacing';
 import { textStyles } from '../../../design-system/typography';
 
 import { useState } from 'react';
+import { useUpdateTailorProfileMutation } from '../../../api/tailors.api';
+import { useAppSelector } from '../../../store/hooks';
+import { Alert } from 'react-native';
 
 interface ProfileStepProps {
   onNext: (data: { businessName: string; description: string }) => void;
@@ -16,9 +19,17 @@ interface ProfileStepProps {
 const ProfileStep: React.FC<ProfileStepProps> = ({ onNext, onBack }) => {
   const [businessName, setBusinessName] = useState('');
   const [description, setDescription] = useState('');
+  const [updateTailorProfile, { isLoading }] = useUpdateTailorProfileMutation();
+  const user = useAppSelector((state) => state.auth.user);
 
-  const handleNext = () => {
-    onNext({ businessName, description });
+  const handleNext = async () => {
+    if (!user) return;
+    try {
+      await updateTailorProfile({ id: user.id, data: { businessName, description } }).unwrap();
+      onNext({ businessName, description });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
+    }
   };
 
   return (
@@ -50,7 +61,7 @@ const ProfileStep: React.FC<ProfileStepProps> = ({ onNext, onBack }) => {
       </Card>
       <View style={styles.buttonContainer}>
         <Button title="Back" onPress={onBack} variant="outline" />
-        <Button title="Next" onPress={handleNext} />
+        <Button title="Next" onPress={handleNext} loading={isLoading} />
       </View>
     </View>
   );

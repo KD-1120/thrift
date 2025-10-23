@@ -60,6 +60,8 @@ function filterTailors(
     specialties?: string;
     minRating?: string;
     search?: string;
+    sortBy?: string;
+    priceRange?: string;
   }
 ) {
   let results = items;
@@ -98,6 +100,30 @@ function filterTailors(
         )
       );
     });
+  }
+
+  if (query.priceRange) {
+    const [min, max] = query.priceRange.split('-').map(p => parseInt(p, 10));
+    if (!isNaN(min) && !isNaN(max)) {
+      results = results.filter(tailor => tailor.priceRange.min >= min && tailor.priceRange.max <= max);
+    }
+  }
+
+  if (query.sortBy) {
+    switch (query.sortBy) {
+      case 'Popular':
+        results.sort((a, b) => b.reviewCount - a.reviewCount);
+        break;
+      case 'Highest Rated':
+        results.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'Price: Low to High':
+        results.sort((a, b) => a.priceRange.min - b.priceRange.min);
+        break;
+      case 'Price: High to Low':
+        results.sort((a, b) => b.priceRange.max - a.priceRange.max);
+        break;
+    }
   }
 
   return results;
@@ -145,13 +171,15 @@ function syncTailorAggregate(tailorId: string) {
 
 export default async function tailorsRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (request: FastifyRequest) => {
-    const { page = '1', pageSize = '20', specialties, minRating, search } =
+    const { page = '1', pageSize = '20', specialties, minRating, search, sortBy, priceRange } =
       request.query as {
         page?: string;
         pageSize?: string;
         specialties?: string;
         minRating?: string;
         search?: string;
+        sortBy?: string;
+        priceRange?: string;
       };
 
     const pageNumber = Math.max(parseInt(page ?? '1', 10) || 1, 1);
@@ -162,6 +190,8 @@ export default async function tailorsRoutes(fastify: FastifyInstance) {
       specialties,
       minRating,
       search,
+      sortBy,
+      priceRange,
     });
 
     filtered.forEach((item) => syncTailorAggregate(item.id));
