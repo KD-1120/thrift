@@ -48,6 +48,8 @@ import HelpFAQScreen from '../screens/HelpFAQ';
 import TermsScreen from '../screens/Terms';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicy';
 
+import PaymentScreen from '../screens/PaymentScreen';
+import PaymentStatusScreen from '../screens/PaymentStatusScreen';
 // New tailor screens
 import TailorDashboardScreen from '../features/tailors/screens/TailorDashboard';
 import TailorProfileManagementScreen from '../features/tailors/screens/TailorProfileManagement';
@@ -105,6 +107,8 @@ export type MainStackParamList = {
   ReviewManagement: undefined;
   PortfolioAnalytics: undefined;
   ResponseTimeSettings: undefined;
+  Payment: undefined;
+  PaymentStatus: { status: 'success' | 'failure' };
 };
 
 export type HomeTabsParamList = {
@@ -326,6 +330,8 @@ function MainNavigator() {
       <MainStack.Screen name="ReviewManagement" component={ReviewManagementScreen} />
       <MainStack.Screen name="PortfolioAnalytics" component={PortfolioAnalyticsScreen} />
       <MainStack.Screen name="ResponseTimeSettings" component={ResponseTimeSettingsScreen} />
+      <MainStack.Screen name="Payment" component={PaymentScreen} />
+      <MainStack.Screen name="PaymentStatus" component={PaymentStatusScreen} />
     </MainStack.Navigator>
   );
 }
