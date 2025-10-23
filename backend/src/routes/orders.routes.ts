@@ -35,6 +35,7 @@ const cancelOrderSchema = z.object({
 });
 
 import { orders, incrementOrderId } from '../store/data';
+import { sendOrderStatusUpdate } from '../services/notifications.service';
 
 export default async function ordersRoutes(fastify: FastifyInstance) {
   // Create new order
@@ -221,6 +222,9 @@ export default async function ordersRoutes(fastify: FastifyInstance) {
       orders.set(orderId, order);
 
       request.log.info(`Order ${orderId} status updated to ${body.status}`);
+
+      // Send notification to customer
+      sendOrderStatusUpdate(orderId, order.customerId, order.tailorId, body.status);
 
       return order;
     }
