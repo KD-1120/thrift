@@ -10,7 +10,6 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,7 +23,6 @@ import { Button } from '../../../components/Button';
 import { colors } from '../../../design-system/colors';
 import { spacing, radius } from '../../../design-system/spacing';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const MAX_FORM_WIDTH = 480;
 
 type AuthStackParamList = {

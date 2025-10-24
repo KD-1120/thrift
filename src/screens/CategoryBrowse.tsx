@@ -56,7 +56,7 @@ export default function CategoryBrowseScreen() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
   // Fetch tailors from backend
-  const { data: tailorsData, isLoading, error, refetch } = useGetTailorsQuery({
+  const { data: tailorsData, isLoading, error } = useGetTailorsQuery({
     page: 1,
     pageSize: 20,
     search: searchQuery,

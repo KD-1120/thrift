@@ -18,7 +18,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGetTailorQuery } from '../api/tailors.api';
 import { IconButton } from '../components/IconButton';
-import { Avatar } from '../components/Avatar';
 import { colors } from '../design-system/colors';
 import { spacing, radius, shadows } from '../design-system/spacing';
 import { textStyles } from '../design-system/typography';
@@ -39,9 +38,6 @@ type NavigationProp = StackNavigationProp<{
   ServiceDetail: { serviceId: string; tailorId: string };
   TailorProfile: { tailorId: string };
 }>;
-
-// Categories for filtering
-const DEFAULT_CATEGORIES = ['All', 'Dresses', 'Tops', 'Bottoms', 'Traditional', 'Suits', 'Accessories'];
 
 export default function TailorGalleryScreen() {
   const navigation = useNavigation<NavigationProp>();

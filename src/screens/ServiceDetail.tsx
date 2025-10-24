@@ -9,7 +9,6 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
-  FlatList,
   Animated,
   ActivityIndicator,
 } from 'react-native';

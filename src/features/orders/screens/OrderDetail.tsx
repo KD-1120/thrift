@@ -333,17 +333,12 @@ export default function OrderDetailScreen() {
 
   const handleCancelOrder = () => {
     // Show confirmation dialog and cancel order
-    console.log('Cancel order:', orderId);
+    // TODO: Implement cancel order functionality
   };
 
   const handleReschedule = () => {
     // Navigate to reschedule screen
-    console.log('Reschedule appointment');
-  };
-
-  const handleUpdateStatus = (newStatus: string) => {
-    // Tailor updating order status
-    console.log('Update status to:', newStatus);
+    // TODO: Implement reschedule functionality
   };
 
   return (
@@ -538,7 +533,9 @@ export default function OrderDetailScreen() {
         ) : orderData.status === 'ready' ? (
           <Button
             title="Mark as Picked Up"
-            onPress={() => console.log('Mark as picked up')}
+            onPress={() => {
+              // TODO: Implement mark as picked up functionality
+            }}
             style={styles.pickupButton}
           />
         ) : (

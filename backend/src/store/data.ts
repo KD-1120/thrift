@@ -1,5 +1,85 @@
-// Shared In-Memory Data Store
-// Replace with database (PostgreSQL, MongoDB, etc.) in production
+// Shared Data Store with Firebase Firestore persistence
+
+import { initializeFirebaseAdmin, firestore } from '../services/firebase-admin';
+
+// Firestore Data Store Class
+class FirestoreDataStore {
+  private db: any;
+
+  constructor() {
+    try {
+      const admin = initializeFirebaseAdmin();
+      this.db = admin.firestore;
+    } catch (error) {
+      console.warn('Firebase not available, falling back to in-memory store:', error);
+      this.db = null;
+    }
+  }
+
+  // Users collection
+  async getUser(id: string): Promise<User | null> {
+    if (!this.db) return users.get(id) || null;
+    try {
+      const doc = await this.db.collection('users').doc(id).get();
+      return doc.exists ? doc.data() : null;
+    } catch (error) {
+      console.error('Error getting user from Firestore:', error);
+      return users.get(id) || null;
+    }
+  }
+
+  async setUser(id: string, user: User): Promise<void> {
+    if (!this.db) {
+      users.set(id, user);
+      return;
+    }
+    try {
+      await this.db.collection('users').doc(id).set(user);
+    } catch (error) {
+      console.error('Error setting user in Firestore:', error);
+      users.set(id, user); // fallback
+    }
+  }
+
+  // Tailors collection
+  async getTailor(id: string): Promise<TailorProfile | null> {
+    if (!this.db) return tailors.get(id) || null;
+    try {
+      const doc = await this.db.collection('tailors').doc(id).get();
+      return doc.exists ? doc.data() : null;
+    } catch (error) {
+      console.error('Error getting tailor from Firestore:', error);
+      return tailors.get(id) || null;
+    }
+  }
+
+  async setTailor(id: string, tailor: TailorProfile): Promise<void> {
+    if (!this.db) {
+      tailors.set(id, tailor);
+      return;
+    }
+    try {
+      await this.db.collection('tailors').doc(id).set(tailor);
+    } catch (error) {
+      console.error('Error setting tailor in Firestore:', error);
+      tailors.set(id, tailor); // fallback
+    }
+  }
+
+  async getAllTailors(): Promise<TailorProfile[]> {
+    if (!this.db) return Array.from(tailors.values());
+    try {
+      const snapshot = await this.db.collection('tailors').get();
+      return snapshot.docs.map((doc: any) => doc.data());
+    } catch (error) {
+      console.error('Error getting all tailors from Firestore:', error);
+      return Array.from(tailors.values()); // fallback
+    }
+  }
+}
+
+// Initialize Firestore store
+const store = new FirestoreDataStore();
 
 export interface User {
   id: string;

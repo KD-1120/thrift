@@ -77,6 +77,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           priceRange: { min: 0, max: 0 },
           turnaroundTime: '7-14 days',
           verified: false,
+          verificationStatus: 'unverified',
         };
 
         tailors.set(uid, newTailorProfile);
@@ -143,6 +144,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
             priceRange: { min: 0, max: 0 },
             turnaroundTime: '7-14 days',
             verified: false,
+            verificationStatus: 'unverified',
           };
 
           tailors.set(uid, newTailorProfile);

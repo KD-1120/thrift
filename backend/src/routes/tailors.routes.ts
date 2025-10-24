@@ -4,6 +4,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
 import {
+  users,
   tailors,
   tailorReviews,
   TailorProfile,
@@ -263,16 +264,84 @@ export default async function tailorsRoutes(fastify: FastifyInstance) {
       const body = updateTailorSchema.parse(request.body);
       const { uid } = (request as AuthenticatedRequest).user;
 
-      const tailor = tailors.get(tailorId);
+      request.log.info(`PATCH /tailors/${tailorId} - Authenticated user: ${uid}`);
 
+      let tailor = tailors.get(tailorId);
+
+      // If tailor profile doesn't exist, create it (for onboarding flow)
       if (!tailor) {
-        return reply.code(404).send({
-          statusCode: 404,
-          error: 'Not Found',
-          message: 'Tailor not found',
-        });
+        request.log.info(`Tailor profile not found for ${tailorId}, attempting to create`);
+
+        // Only allow creating profile for the authenticated user
+        if (tailorId !== uid) {
+          request.log.warn(`User ${uid} attempted to create profile for ${tailorId}`);
+          return reply.code(404).send({
+            statusCode: 404,
+            error: 'Not Found',
+            message: 'Tailor not found',
+          });
+        }
+
+        // Get user info to create the profile
+        let user = users.get(uid);
+        request.log.info(`User data for ${uid}: ${user ? `found (role: ${user.role})` : 'not found'}`);
+        
+        // If user doesn't exist (e.g., server restarted), auto-create them as a tailor
+        // This is safe because they're already authenticated via Firebase
+        if (!user) {
+          const authUser = (request as AuthenticatedRequest).user;
+          user = {
+            id: uid,
+            email: authUser.email || '',
+            name: authUser.name || authUser.email?.split('@')[0] || 'Tailor',
+            phone: '',
+            role: 'tailor',
+            avatar: null,
+            createdAt: new Date().toISOString(),
+            hasCompletedOnboarding: false,
+          };
+          users.set(uid, user);
+          request.log.info(`Auto-created user ${uid} as tailor (server restart recovery)`);
+        }
+        
+        if (user.role !== 'tailor') {
+          return reply.code(403).send({
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Only tailors can create tailor profiles',
+          });
+        }
+
+        // Create new tailor profile
+        tailor = {
+          id: uid,
+          userId: uid,
+          businessName: `${user.name}'s Atelier`,
+          description: 'Update your tailor profile with specialties, portfolio highlights, and pricing to start attracting clients.',
+          avatar: user.avatar || null,
+          rating: 0,
+          reviewCount: 0,
+          specialties: [],
+          location: {
+            address: '',
+            city: '',
+            region: '',
+            coordinates: undefined,
+          },
+          portfolio: [],
+          priceRange: { min: 0, max: 0 },
+          turnaroundTime: '7-14 days',
+          verified: false,
+          verificationStatus: 'unverified',
+        };
+
+        tailors.set(tailorId, tailor);
+        if (!tailorReviews.has(tailorId)) {
+          tailorReviews.set(tailorId, []);
+        }
       }
 
+      // Check ownership
       if (tailor.userId !== uid) {
         return reply.code(403).send({
           statusCode: 403,
@@ -345,14 +414,74 @@ export default async function tailorsRoutes(fastify: FastifyInstance) {
       const body = portfolioItemSchema.parse(request.body);
       const { uid } = (request as AuthenticatedRequest).user;
 
-      const tailor = tailors.get(tailorId);
+      let tailor = tailors.get(tailorId);
 
+      // If tailor profile doesn't exist, create it (similar to PATCH endpoint)
       if (!tailor) {
-        return reply.code(404).send({
-          statusCode: 404,
-          error: 'Not Found',
-          message: 'Tailor not found',
-        });
+        request.log.info(`Tailor profile not found for ${tailorId}, auto-creating for portfolio upload`);
+
+        // Only allow creating profile for the authenticated user
+        if (tailorId !== uid) {
+          return reply.code(404).send({
+            statusCode: 404,
+            error: 'Not Found',
+            message: 'Tailor not found',
+          });
+        }
+
+        // Get or create user info
+        let user = users.get(uid);
+        if (!user) {
+          const authUser = (request as AuthenticatedRequest).user;
+          user = {
+            id: uid,
+            email: authUser.email || '',
+            name: authUser.name || authUser.email?.split('@')[0] || 'Tailor',
+            phone: '',
+            role: 'tailor',
+            avatar: null,
+            createdAt: new Date().toISOString(),
+            hasCompletedOnboarding: false,
+          };
+          users.set(uid, user);
+          request.log.info(`Auto-created user ${uid} as tailor (portfolio upload)`);
+        }
+
+        if (user.role !== 'tailor') {
+          return reply.code(403).send({
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Only tailors can add portfolio items',
+          });
+        }
+
+        // Create new tailor profile
+        tailor = {
+          id: uid,
+          userId: uid,
+          businessName: `${user.name}'s Atelier`,
+          description: 'Update your tailor profile with specialties, portfolio highlights, and pricing to start attracting clients.',
+          avatar: user.avatar || null,
+          rating: 0,
+          reviewCount: 0,
+          specialties: [],
+          location: {
+            address: '',
+            city: '',
+            region: '',
+            coordinates: undefined,
+          },
+          portfolio: [],
+          priceRange: { min: 0, max: 0 },
+          turnaroundTime: '7-14 days',
+          verified: false,
+          verificationStatus: 'unverified',
+        };
+
+        tailors.set(tailorId, tailor);
+        if (!tailorReviews.has(tailorId)) {
+          tailorReviews.set(tailorId, []);
+        }
       }
 
       if (tailor.userId !== uid) {
@@ -364,7 +493,7 @@ export default async function tailorsRoutes(fastify: FastifyInstance) {
       }
 
       const newItem = {
-        id: `portfolio_${Date.now()}`,
+        id: `portfolio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         ...body,
       };
 

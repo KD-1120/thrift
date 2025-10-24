@@ -182,7 +182,6 @@ export default function HomeScreen() {
           size={24}
           color={colors.text.primary}
           onPress={() => {
-            navigation.navigate('Notifications');
             dispatch(markAllRead());
           }}
           badge={unreadCount}

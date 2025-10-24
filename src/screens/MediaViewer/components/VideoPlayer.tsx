@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { VideoView, VideoPlayer as ExpoVideoPlayer } from 'expo-video';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import type { MediaItem } from '../../../types';
+import { getCorsProxiedUrl } from '../../../utils/video';
 
 interface VideoPlayerProps {
   item: MediaItem;
@@ -30,17 +31,15 @@ export function VideoPlayer({
   onTogglePlayPause,
 }: VideoPlayerProps) {
 
-  // Create VideoPlayer instance
-  const player = useMemo(() => {
-    if (item.type === 'video' && item.url) {
-      return new ExpoVideoPlayer(item.url);
-    }
-    return null;
-  }, [item.url, item.type]);
+  // Create VideoPlayer instance using the hook with CORS proxy for web
+  const videoUrl = item.type === 'video' && item.url ? getCorsProxiedUrl(item.url) : '';
+  const player = useVideoPlayer(videoUrl, (player) => {
+    player.loop = true;
+  });
 
   // Control player based on props
   useEffect(() => {
-    if (player) {
+    if (player && item.type === 'video') {
       if (isActive && !userPaused) {
         player.play();
       } else {
@@ -48,9 +47,8 @@ export function VideoPlayer({
       }
       
       player.muted = isMuted;
-      player.loop = true;
     }
-  }, [player, isActive, userPaused, isMuted]);
+  }, [player, isActive, userPaused, isMuted, item.type]);
 
   // Responsive sizing
   const window = Dimensions.get('window');
@@ -74,7 +72,7 @@ export function VideoPlayer({
 
   return (
     <View style={styles.mediaContainer}>
-      {player && (
+      {item.type === 'video' && player && (
         <VideoView
           ref={videoRef}
           player={player}
@@ -82,6 +80,7 @@ export function VideoPlayer({
           contentFit="contain"
           allowsFullscreen={false}
           allowsPictureInPicture={false}
+          nativeControls={false}
         />
       )}
 

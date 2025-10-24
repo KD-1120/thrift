@@ -1,6 +1,6 @@
 // Tailor Profile Management Screen - Create and edit tailor business profile
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,31 +20,106 @@ import { Avatar } from '../../../components/Avatar';
 import { colors } from '../../../design-system/colors';
 import { spacing, radius } from '../../../design-system/spacing';
 import { textStyles } from '../../../design-system/typography';
+import { useAppSelector } from '../../../store/hooks';
+import { useGetTailorQuery, useUpdateTailorProfileMutation } from '../../../api/tailors.api';
+
+type NavigationProp = StackNavigationProp<any>;
 
 type NavigationProp = StackNavigationProp<any>;
 
 export default function TailorProfileManagementScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const user = useAppSelector((state) => state.auth.user);
+  const [updateTailorProfile, { isLoading }] = useUpdateTailorProfileMutation();
+  const { data: tailorProfile, isLoading: isLoadingProfile, refetch } = useGetTailorQuery(user?.id || '', {
+    skip: !user?.id,
+  });
 
   // Form state
-  const [businessName, setBusinessName] = useState('Ama Serwaa Tailoring');
-  const [description, setDescription] = useState(
-    'Expert tailor specializing in traditional and modern Ghanaian fashion. Over 10 years of experience creating bespoke garments for weddings, corporate events, and everyday wear.'
-  );
-  const [phone, setPhone] = useState('+233 24 123 4567');
-  const [email, setEmail] = useState('ama.serwaa@email.com');
-  const [address, setAddress] = useState('Accra Central Market, Accra');
-  const [specialties, setSpecialties] = useState([
-    'Wedding Gowns',
-    'Kente Cloth',
-    'Corporate Attire',
-    'Traditional Wear',
-  ]);
-  const [minPrice, setMinPrice] = useState('150');
-  const [maxPrice, setMaxPrice] = useState('1500');
-  const [turnaroundTime, setTurnaroundTime] = useState('7-14 days');
+  const [businessName, setBusinessName] = useState('');
+  const [description, setDescription] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [turnaroundTime, setTurnaroundTime] = useState('');
 
   const [newSpecialty, setNewSpecialty] = useState('');
+
+  // Check if user is a tailor
+  useEffect(() => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to access this feature.');
+      navigation.goBack();
+      return;
+    }
+
+    if (user.role !== 'tailor') {
+      Alert.alert('Access Denied', 'This feature is only available for tailors.');
+      navigation.goBack();
+      return;
+    }
+  }, [user, navigation]);
+
+  // Pre-fill form with existing data
+  useEffect(() => {
+    if (tailorProfile) {
+      setBusinessName(tailorProfile.businessName || '');
+      setDescription(tailorProfile.description || '');
+      setPhone(user?.phone || '');
+      setEmail(user?.email || '');
+      setAddress(tailorProfile.location?.address || '');
+      setSpecialties(tailorProfile.specialties || []);
+      setMinPrice(tailorProfile.priceRange?.min?.toString() || '');
+      setMaxPrice(tailorProfile.priceRange?.max?.toString() || '');
+      setTurnaroundTime(tailorProfile.turnaroundTime || '');
+    }
+  }, [tailorProfile, user]);
+
+  // Show loading
+  if (isLoadingProfile) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show empty state if no profile exists
+  if (!tailorProfile) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <View style={styles.headerRight} />
+        </View>
+
+        <View style={styles.emptyContainer}>
+          <Ionicons name="person-circle-outline" size={80} color={colors.text.secondary} />
+          <Text style={styles.emptyTitle}>No Profile Found</Text>
+          <Text style={styles.emptySubtitle}>
+            Complete your tailor onboarding to create your business profile.
+          </Text>
+          <Button
+            title="Complete Onboarding"
+            onPress={() => navigation.navigate('TailorOnboarding')}
+            style={{ marginTop: spacing.xl }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const addSpecialty = () => {
     if (newSpecialty.trim() && !specialties.includes(newSpecialty.trim())) {
@@ -57,17 +132,42 @@ export default function TailorProfileManagementScreen() {
     setSpecialties(specialties.filter(s => s !== specialty));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user) return;
+
     // Validate required fields
-    if (!businessName.trim() || !description.trim() || !phone.trim()) {
+    if (!businessName.trim() || !description.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    // In real app, this would save to API
-    Alert.alert('Success', 'Profile updated successfully!', [
-      { text: 'OK', onPress: () => navigation.goBack() }
-    ]);
+    try {
+      await updateTailorProfile({
+        id: user.id,
+        data: {
+          businessName: businessName.trim(),
+          description: description.trim(),
+          location: {
+            address: address.trim(),
+            city: tailorProfile.location?.city || '',
+            region: tailorProfile.location?.region || '',
+          },
+          specialties,
+          priceRange: {
+            min: parseInt(minPrice) || 0,
+            max: parseInt(maxPrice) || 0,
+          },
+          turnaroundTime: turnaroundTime.trim(),
+        },
+      }).unwrap();
+
+      Alert.alert('Success', 'Profile updated successfully!', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    }
   };
 
   return (
@@ -86,11 +186,11 @@ export default function TailorProfileManagementScreen() {
           <View style={styles.headerRight} />
         </View>
 
-        {/* Avatar Section */}
+  // Avatar Section
         <View style={styles.avatarSection}>
           <Avatar
-            uri="https://via.placeholder.com/120x120/FF6B6B/FFFFFF?text=AS"
-            name={businessName}
+            uri={tailorProfile.avatar || undefined}
+            name={user?.name || 'Tailor'}
             size={100}
           />
           <TouchableOpacity style={styles.changePhotoButton} activeOpacity={0.8}>
@@ -286,6 +386,36 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40, // Balance the back button width
+  },
+
+  // Loading and Empty States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    ...textStyles.body,
+    color: colors.text.secondary,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  emptyTitle: {
+    ...textStyles.h3,
+    color: colors.text.primary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    ...textStyles.body,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 
   // Avatar

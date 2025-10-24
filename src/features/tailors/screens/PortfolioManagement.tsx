@@ -24,6 +24,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Card } from '../../../components/Card';
 import { Button } from '../../../components/Button';
 import { colors } from '../../../design-system/colors';
+import { SAMPLE_VIDEO_URLS } from '../../../utils/video';
 import { spacing, radius } from '../../../design-system/spacing';
 import { textStyles } from '../../../design-system/typography';
 
@@ -104,7 +105,7 @@ export default function PortfolioManagementScreen() {
     {
       id: '3',
       type: 'video',
-      mediaUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      mediaUrl: SAMPLE_VIDEO_URLS.forBiggerJoyrides,
       thumbnailUrl: 'https://via.placeholder.com/300x400/96CEB4/FFFFFF?text=Corporate+Blazer',
       title: 'Corporate Blazer',
       category: 'Corporate',

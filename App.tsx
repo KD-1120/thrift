@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { store } from './src/store/store';
 import OnboardingNavigator from './src/store/OnboardingNavigator';
 import { useAuthRestore } from './src/hooks/useAuthRestore';
@@ -32,12 +33,14 @@ function AppContent() {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Provider store={store}>
-        <StatusBar style="auto" />
-        <ErrorBoundary>
-          <AppContent />
-        </ErrorBoundary>
-      </Provider>
+      <SafeAreaProvider>
+        <Provider store={store}>
+          <StatusBar style="auto" />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
+        </Provider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

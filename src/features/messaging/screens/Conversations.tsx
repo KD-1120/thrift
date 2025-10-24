@@ -7,7 +7,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,14 +15,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useGetConversationsQuery } from '../api/messaging.api';
 import { Avatar } from '../../../components/Avatar';
 import { colors } from '../../../design-system/colors';
-import { spacing, radius } from '../../../design-system/spacing';
+import { spacing } from '../../../design-system/spacing';
 import { textStyles } from '../../../design-system/typography';
+import { useAppSelector } from '../../../store/hooks';
 
 type NavigationProp = StackNavigationProp<any>;
 
 export default function ConversationsScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { data: conversations, isLoading, error } = useGetConversationsQuery();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { data: conversations, isLoading, error } = useGetConversationsQuery(undefined, {
+    skip: !isAuthenticated, // Skip the query if not authenticated
+  });
 
   const formatLastMessageTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -106,6 +109,18 @@ export default function ConversationsScreen() {
       </Text>
     </View>
   );
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="log-in-outline" size={64} color={colors.text.tertiary} />
+          <Text style={styles.errorTitle}>Authentication Required</Text>
+          <Text style={styles.errorMessage}>Please sign in to view your messages.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -1,6 +1,6 @@
 // Portfolio Analytics Screen - Detailed portfolio performance metrics
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,13 @@ import { Button } from '../../../components/Button';
 import { colors } from '../../../design-system/colors';
 import { spacing, radius } from '../../../design-system/spacing';
 import { textStyles } from '../../../design-system/typography';
+import { useAppSelector } from '../../../store/hooks';
+import { useGetTailorQuery } from '../../../api/tailors.api';
+import { Alert } from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+type NavigationProp = StackNavigationProp<any>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -114,139 +121,39 @@ const MOCK_PORTFOLIO_ANALYTICS = {
 
 export default function PortfolioAnalyticsScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const user = useAppSelector((state) => state.auth.user);
+  const { data: tailorProfile, isLoading: isLoadingProfile } = useGetTailorQuery(user?.id || '', {
+    skip: !user?.id,
+  });
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
 
-  const renderMetricCard = (
-    title: string,
-    value: string | number,
-    subtitle: string | undefined,
-    icon: string,
-    trend: { value: number; isPositive: boolean } | undefined
-  ) => (
-    <Card variant="elevated" padding="lg" style={styles.metricCard}>
-      <View style={styles.metricHeader}>
-        <View style={styles.metricIcon}>
-          <Ionicons name={icon as any} size={20} color={colors.primary[600]} />
+  // Check if user is a tailor
+  useEffect(() => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to access this feature.');
+      navigation.goBack();
+      return;
+    }
+
+    if (user.role !== 'tailor') {
+      Alert.alert('Access Denied', 'This feature is only available for tailors.');
+      navigation.goBack();
+      return;
+    }
+  }, [user, navigation]);
+
+  // Show loading
+  if (isLoadingProfile) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading analytics...</Text>
         </View>
-        {trend && (
-          <View style={[styles.trendBadge, trend.isPositive ? styles.trendPositive : styles.trendNegative]}>
-            <Ionicons
-              name={trend.isPositive ? 'trending-up' : 'trending-down'}
-              size={12}
-              color={trend.isPositive ? colors.success.main : colors.error.main}
-            />
-            <Text style={[styles.trendText, trend.isPositive ? styles.trendTextPositive : styles.trendTextNegative]}>
-              {Math.abs(trend.value)}%
-            </Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricTitle}>{title}</Text>
-      {subtitle && <Text style={styles.metricSubtitle}>{subtitle}</Text>}
-    </Card>
-  );
+      </SafeAreaView>
+    );
+  }
 
-  const renderTopPerformingItem = (item: typeof MOCK_PORTFOLIO_ANALYTICS.topPerforming[0]) => (
-    <TouchableOpacity
-      key={item.id}
-      style={styles.topItemCard}
-      onPress={() => navigation.navigate('PortfolioManagement')}
-      activeOpacity={0.8}
-    >
-      <Image source={{ uri: item.imageUrl }} style={styles.topItemImage} />
-      <View style={styles.topItemContent}>
-        <Text style={styles.topItemTitle}>{item.title}</Text>
-        <Text style={styles.topItemCategory}>{item.category}</Text>
-        <View style={styles.topItemStats}>
-          <View style={styles.stat}>
-            <Ionicons name="heart" size={14} color={colors.error.main} />
-            <Text style={styles.statText}>{item.likes}</Text>
-          </View>
-          <View style={styles.stat}>
-            <Ionicons name="chatbubble" size={14} color={colors.text.secondary} />
-            <Text style={styles.statText}>{item.comments}</Text>
-          </View>
-          <View style={styles.stat}>
-            <Ionicons name="share" size={14} color={colors.text.secondary} />
-            <Text style={styles.statText}>{item.shares}</Text>
-          </View>
-        </View>
-        <View style={styles.engagementBadge}>
-          <Text style={styles.engagementText}>{item.engagement}% engagement</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderCategoryPerformance = () => (
-    <Card variant="elevated" padding="xl" style={styles.section}>
-      <Text style={styles.sectionTitle}>Category Performance</Text>
-      <Text style={styles.sectionSubtitle}>Which categories drive the most engagement?</Text>
-
-      {MOCK_PORTFOLIO_ANALYTICS.categoryPerformance.map((category) => (
-        <View key={category.category} style={styles.categoryRow}>
-          <View style={styles.categoryInfo}>
-            <Text style={styles.categoryName}>{category.category}</Text>
-            <Text style={styles.categoryStats}>
-              {category.items} items • {category.likes} likes • {category.comments} comments
-            </Text>
-          </View>
-          <View style={styles.categoryMetrics}>
-            <Text style={styles.categoryEngagement}>{category.avgEngagement}% avg</Text>
-            <View style={styles.categoryBar}>
-              <View
-                style={[
-                  styles.categoryBarFill,
-                  { width: `${(category.avgEngagement / 35) * 100}%` }
-                ]}
-              />
-            </View>
-          </View>
-        </View>
-      ))}
-    </Card>
-  );
-
-  const renderRecentActivity = () => (
-    <Card variant="elevated" padding="xl" style={styles.section}>
-      <Text style={styles.sectionTitle}>Recent Activity</Text>
-      <Text style={styles.sectionSubtitle}>Latest interactions with your portfolio</Text>
-
-      {MOCK_PORTFOLIO_ANALYTICS.recentActivity.map((activity) => (
-        <View key={activity.id} style={styles.activityItem}>
-          <View style={styles.activityIcon}>
-            <Ionicons
-              name={
-                activity.type === 'like' ? 'heart' :
-                activity.type === 'comment' ? 'chatbubble' : 'share'
-              }
-              size={16}
-              color={
-                activity.type === 'like' ? colors.error.main :
-                activity.type === 'comment' ? colors.primary[600] : colors.success.main
-              }
-            />
-          </View>
-          <View style={styles.activityContent}>
-            <Text style={styles.activityText}>
-              <Text style={styles.activityUser}>{activity.user}</Text>
-              {' '}
-              {activity.type === 'like' ? 'liked' :
-               activity.type === 'comment' ? 'commented on' : 'shared'}
-              {' '}
-              <Text style={styles.activityItem}>{activity.item}</Text>
-            </Text>
-            {activity.comment && (
-              <Text style={styles.activityComment}>"{activity.comment}"</Text>
-            )}
-            <Text style={styles.activityTime}>{activity.timestamp}</Text>
-          </View>
-        </View>
-      ))}
-    </Card>
-  );
-
+  // Show empty state - no analytics data available yet
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -263,80 +170,18 @@ export default function PortfolioAnalyticsScreen() {
           <View style={styles.headerRight} />
         </View>
 
-        {/* Time Range Selector */}
-        <View style={styles.timeRangeContainer}>
-          {(['week', 'month', 'year'] as const).map((range) => (
-            <TouchableOpacity
-              key={range}
-              style={[styles.timeRangeButton, timeRange === range && styles.timeRangeButtonActive]}
-              onPress={() => setTimeRange(range)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.timeRangeText, timeRange === range && styles.timeRangeTextActive]}>
-                {range.charAt(0).toUpperCase() + range.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Overview Metrics */}
-        <View style={styles.metricsGrid}>
-          {renderMetricCard(
-            'Total Views',
-            MOCK_PORTFOLIO_ANALYTICS.overview.totalViews.toLocaleString(),
-            'Portfolio impressions',
-            'eye',
-            { value: 15.3, isPositive: true }
-          )}
-          {renderMetricCard(
-            'Total Likes',
-            MOCK_PORTFOLIO_ANALYTICS.overview.totalLikes.toLocaleString(),
-            'Customer engagement',
-            'heart',
-            { value: 8.7, isPositive: true }
-          )}
-          {renderMetricCard(
-            'Comments',
-            MOCK_PORTFOLIO_ANALYTICS.overview.totalComments,
-            'Conversations started',
-            'chatbubble',
-            { value: 12.1, isPositive: true }
-          )}
-          {renderMetricCard(
-            'Shares',
-            MOCK_PORTFOLIO_ANALYTICS.overview.totalShares,
-            'Social reach',
-            'share',
-            { value: -2.3, isPositive: false }
-          )}
-        </View>
-
-        {/* Top Performing Items */}
-        <Card variant="elevated" padding="xl" style={styles.section}>
-          <Text style={styles.sectionTitle}>Top Performing Items</Text>
-          <Text style={styles.sectionSubtitle}>Your most engaging portfolio pieces</Text>
-
-          {MOCK_PORTFOLIO_ANALYTICS.topPerforming.map((item) => renderTopPerformingItem(item))}
-        </Card>
-
-        {/* Category Performance */}
-        {renderCategoryPerformance()}
-
-        {/* Recent Activity */}
-        {renderRecentActivity()}
-
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
+        {/* Empty State */}
+        <View style={styles.emptyContainer}>
+          <Ionicons name="analytics-outline" size={80} color={colors.text.secondary} />
+          <Text style={styles.emptyTitle}>No Analytics Yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Analytics will be available once you have portfolio items and customer interactions.
+            Start by adding items to your portfolio to track performance.
+          </Text>
           <Button
-            title="Optimize Portfolio"
+            title="Add Portfolio Items"
             onPress={() => navigation.navigate('PortfolioManagement')}
-            style={styles.actionButton}
-            variant="outline"
-          />
-          <Button
-            title="Create New Item"
-            onPress={() => navigation.navigate('PortfolioManagement')}
-            style={styles.actionButton}
+            style={{ marginTop: spacing.xl }}
           />
         </View>
       </ScrollView>
@@ -370,6 +215,37 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40,
+  },
+
+  // Loading and Empty States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    ...textStyles.body,
+    color: colors.text.secondary,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.huge,
+  },
+  emptyTitle: {
+    ...textStyles.h3,
+    color: colors.text.primary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    ...textStyles.body,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 
   // Time Range

@@ -20,6 +20,7 @@ import { IconButton } from '../components/IconButton';
 import { colors } from '../design-system/colors';
 import { spacing } from '../design-system/spacing';
 import type { MediaItem } from '../types';
+import { SAMPLE_VIDEO_URLS } from '../utils/video';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GAP = 3;
@@ -52,7 +53,7 @@ const FALLBACK_MEDIA: MediaItem[] = [
   {
     id: '2',
     type: 'video',
-    url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    url: SAMPLE_VIDEO_URLS.bigBuckBunny,
     thumbnailUrl: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400',
     aspectRatio: 1,
     author: { id: 'u2', name: 'Kofi Couture', avatar: 'https://i.pravatar.cc/150?img=2' },
@@ -100,7 +101,7 @@ const FALLBACK_MEDIA: MediaItem[] = [
   {
     id: '5',
     type: 'video',
-    url: 'https://www.w3schools.com/html/movie.mp4',
+    url: SAMPLE_VIDEO_URLS.forBiggerBlazes,
     thumbnailUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400',
     aspectRatio: 1,
     author: { id: 'u5', name: 'Abena Fabrics', avatar: 'https://i.pravatar.cc/150?img=5' },
@@ -146,7 +147,7 @@ const FALLBACK_MEDIA: MediaItem[] = [
   {
     id: '8',
     type: 'video',
-    url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    url: SAMPLE_VIDEO_URLS.elephantsDream,
     thumbnailUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
     aspectRatio: 1,
     author: { id: 'u2', name: 'Kofi Couture', avatar: 'https://i.pravatar.cc/150?img=2' },
@@ -192,7 +193,7 @@ const FALLBACK_MEDIA: MediaItem[] = [
   {
     id: '11',
     type: 'video',
-    url: 'https://www.w3schools.com/html/movie.mp4',
+    url: SAMPLE_VIDEO_URLS.forBiggerFun,
     thumbnailUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400',
     aspectRatio: 1,
     author: { id: 'u4', name: 'Kwame Styles', avatar: 'https://i.pravatar.cc/150?img=4' },

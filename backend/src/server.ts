@@ -14,6 +14,7 @@ import tailorsRoutes from './routes/tailors.routes';
 import messagingRoutes from './routes/messaging.routes';
 import callsRoutes from './routes/calls.routes';
 import { errorHandler } from './middleware/error-handler';
+import { authenticate } from './middleware/auth.middleware';
 
 // Load environment variables
 dotenv.config();
@@ -33,6 +34,7 @@ const fastify = Fastify({
       ? undefined // Use default console transport
       : undefined,
   },
+  bodyLimit: 10 * 1024 * 1024, // 10MB limit for image uploads (base64 encoded)
 });
 
 // Register plugins
@@ -41,6 +43,9 @@ async function registerPlugins() {
   await fastify.register(helmet, {
     contentSecurityPolicy: false, // Disable for API
   });
+
+  // Authentication middleware
+  fastify.decorate('authenticate', authenticate);
 
   // CORS configuration
   await fastify.register(cors, {
@@ -68,6 +73,7 @@ async function registerPlugins() {
       }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
   // Rate limiting

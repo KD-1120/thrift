@@ -52,8 +52,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     left: 0,
-    right: 80,
+    right: 0, // Changed from 80 to 0 for full width
     paddingHorizontal: spacing.lg,
+    paddingRight: 96, // Add padding to avoid overlap with sidebar
     paddingTop: spacing.xl,
     paddingBottom: spacing.md,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',

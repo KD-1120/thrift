@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.card,
   },
   elevated: {
-    ...shadows.md,
+    boxShadow: shadows.md.boxShadow,
   },
   outlined: {
     borderWidth: 1,
